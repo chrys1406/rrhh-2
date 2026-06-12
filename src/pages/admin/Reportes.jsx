@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from "react";
-import {Search,Filter,Download,Users,Calendar,CalendarCheck,FileText,ChevronDown,BarChart3,Clock,Check,X,AlertCircle,} from "lucide-react";
+import {
+  Search,
+  Filter,
+  Download,
+  Users,
+  Calendar,
+  CalendarCheck,
+  FileText,
+  ChevronDown,
+  BarChart3,
+  Clock,
+  Check,
+  X,
+  AlertCircle,
+} from "lucide-react";
 import { supabase } from "../../supabase/client";
 import { generarPDFAsistencia } from "../../reports/pdfAsistencia";
 import { generarPDFPermisos } from "../../reports/pdfPermisos";
@@ -275,7 +289,13 @@ export default function Reportes() {
       ];
     }
   };
+  const handlePDF = () => {
+    if (filtros.tipo === "asistencia") generarPDFAsistencia(datos, filtros);
+    if (filtros.tipo === "permisos") generarPDFPermisos(datos, filtros);
+    if (filtros.tipo === "vacaciones") generarPDFVacaciones(datos, filtros);
+  };
 
+  const handleExcel = () => exportarExcel(datos, filtros);
   if (cargandoInit)
     return (
       <div className="flex-1 flex items-center justify-center">

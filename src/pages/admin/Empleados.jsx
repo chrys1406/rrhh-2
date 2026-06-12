@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Users, Search, Plus, Pencil, Trash2, X } from "lucide-react";
+import {
+  Users,
+  Search,
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Eye,
+  MessageSquare,
+} from "lucide-react";
 import { supabase } from "../../supabase/client";
 
 const INPUT_BASE =
@@ -62,6 +71,7 @@ export default function Empleados() {
   const [editando, setEditando] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
+  const [modalPerfil, setModalPerfil] = useState(null);
 
   useEffect(() => {
     cargarDatos();
@@ -72,7 +82,7 @@ export default function Empleados() {
     const [{ data: emps }, { data: ars }, { data: cars }] = await Promise.all([
       supabase
         .from("empleado")
-        .select("*, area(nombre_area), cargo(nombre_cargo)")
+        .select("*, area(nombre_area), cargo(nombre_cargo), foto_url")
         .order("id_empleado"),
       supabase.from("area").select("*"),
       supabase.from("cargo").select("*"),
@@ -259,6 +269,7 @@ export default function Empleados() {
                   <th className="px-5 py-3">Área</th>
                   <th className="px-5 py-3">Fecha Ingreso</th>
                   <th className="px-5 py-3">Estado</th>
+                  <th className="px-5 py-3 text-center">Perfil</th>
                   <th className="px-5 py-3 text-right">Acciones</th>
                 </tr>
               </thead>
@@ -305,6 +316,14 @@ export default function Empleados() {
                         >
                           {emp.estado ?? "activo"}
                         </span>
+                      </td>
+                      <td className="px-5 py-3 text-center">
+                        <button
+                          onClick={() => setModalPerfil(emp)}
+                          className="p-1.5 rounded-lg bg-[#eef4fc] text-[#004bb4] hover:bg-[#d0e3fc] transition-colors"
+                        >
+                          <Eye size={13} />
+                        </button>
                       </td>
                       <td className="px-5 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -515,6 +534,111 @@ export default function Empleados() {
             </button>
           </div>
         </Modal>
+      )}
+      {/* Modal Perfil */}
+      {modalPerfil && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl">
+            {/* Header modal */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 text-base">
+                Perfil del Empleado
+              </h3>
+              <button
+                onClick={() => setModalPerfil(null)}
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 flex flex-col sm:flex-row gap-6">
+              {/* Columna izquierda: foto + nombre */}
+              <div className="flex flex-col items-center gap-3 sm:w-48 shrink-0">
+                {modalPerfil.foto_url ? (
+                  <img
+                    src={modalPerfil.foto_url}
+                    alt="Foto empleado"
+                    className="w-28 h-28 rounded-full object-cover border-4 border-[#d0e3fc] shadow"
+                  />
+                ) : (
+                  <div className="w-28 h-28 rounded-full bg-[#eef4fc] border-4 border-[#d0e3fc] flex items-center justify-center shadow">
+                    <span className="text-3xl font-black text-[#004bb4]">
+                      {`${modalPerfil.nombre?.charAt(0)}${modalPerfil.apellido?.charAt(0)}`.toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div className="text-center">
+                  <p className="font-bold text-slate-900 text-sm">
+                    {modalPerfil.nombre} {modalPerfil.apellido}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {modalPerfil.cargo?.nombre_cargo}
+                  </p>
+                  <span
+                    className={`inline-block mt-2 px-2 py-0.5 rounded-md font-bold text-[10px] capitalize ${
+                      modalPerfil.estado === "activo"
+                        ? "bg-green-50 text-green-600"
+                        : "bg-red-50 text-red-500"
+                    }`}
+                  >
+                    {modalPerfil.estado ?? "activo"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Columna derecha: info */}
+              <div className="flex-1 grid grid-cols-2 gap-4">
+                {[
+                  { label: "CI", value: modalPerfil.ci },
+                  { label: "Teléfono", value: modalPerfil.telefono ?? "—" },
+                  { label: "Área", value: modalPerfil.area?.nombre_area },
+                  { label: "Cargo", value: modalPerfil.cargo?.nombre_cargo },
+                  {
+                    label: "Fecha de Ingreso",
+                    value: modalPerfil.fecha_ingreso,
+                  },
+                  {
+                    label: "Antigüedad",
+                    value: (() => {
+                      if (!modalPerfil.fecha_ingreso) return "—";
+                      const años =
+                        (new Date() - new Date(modalPerfil.fecha_ingreso)) /
+                        (1000 * 60 * 60 * 24 * 365.25);
+                      const a = Math.floor(años);
+                      const m = Math.floor((años - a) * 12);
+                      if (a === 0) return `${m} mes${m !== 1 ? "es" : ""}`;
+                      return `${a} año${a !== 1 ? "s" : ""} ${m > 0 ? `y ${m} mes${m !== 1 ? "es" : ""}` : ""}`;
+                    })(),
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="bg-slate-50 rounded-xl px-4 py-3"
+                  >
+                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                      {item.label}
+                    </p>
+                    <p className="text-sm font-bold text-slate-800 mt-0.5">
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer con botón enviar mensaje */}
+            <div className="px-6 py-4 border-t border-slate-100 flex justify-between items-center">
+              <p className="text-[11px] text-slate-400">
+                ID Empleado: #{modalPerfil.id_empleado}
+              </p>
+              <button className="flex items-center gap-2 px-4 py-2 bg-[#004bb4] hover:bg-[#003785] text-white text-xs font-semibold rounded-xl transition-colors shadow-lg shadow-blue-600/20">
+                <MessageSquare size={14} />
+                Enviar Mensaje
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
