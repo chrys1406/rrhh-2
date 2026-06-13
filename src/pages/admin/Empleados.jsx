@@ -8,6 +8,7 @@ import {
   X,
   Eye,
   MessageSquare,
+  Send,
 } from "lucide-react";
 import { supabase } from "../../supabase/client";
 
@@ -38,9 +39,18 @@ function Modal({ titulo, onClose, children }) {
   );
 }
 
-function AvatarInicial({ nombre, apellido }) {
+function AvatarEmpleado({ nombre, apellido, foto_url }) {
   const iniciales =
     `${nombre?.charAt(0) ?? ""}${apellido?.charAt(0) ?? ""}`.toUpperCase();
+  if (foto_url) {
+    return (
+      <img
+        src={foto_url}
+        alt={`${nombre} ${apellido}`}
+        className="w-9 h-9 rounded-full object-cover shrink-0 border-2 border-[#d0e3fc]"
+      />
+    );
+  }
   return (
     <div className="w-9 h-9 rounded-full bg-[#004bb4] flex items-center justify-center text-white font-bold text-xs shrink-0">
       {iniciales}
@@ -72,6 +82,12 @@ export default function Empleados() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const [modalPerfil, setModalPerfil] = useState(null);
+
+  const [mensajesChat, setMensajesChat] = useState([]);
+  const [nuevoMensaje, setNuevoMensaje] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
+  const hoy = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     cargarDatos();
@@ -213,6 +229,43 @@ export default function Empleados() {
     );
   });
 
+  const abrirPerfil = async (emp) => {
+    setModalPerfil(emp);
+    setNuevoMensaje("");
+    // Cargar mensajes de hoy entre admin y este empleado
+    const { data } = await supabase
+      .from("mensaje")
+      .select("*")
+      .or(
+        `and(id_remitente.eq.${usuario.id},id_destinatario.eq.${emp.id_usuario}),and(id_remitente.eq.${emp.id_usuario},id_destinatario.eq.${usuario.id})`,
+      )
+      .gte("created_at", `${hoy}T00:00:00`)
+      .order("created_at", { ascending: true });
+    setMensajesChat(data || []);
+  };
+
+  const enviarMensaje = async () => {
+    if (!nuevoMensaje.trim() || !modalPerfil) return;
+    setEnviando(true);
+    await supabase.from("mensaje").insert({
+      id_remitente: usuario.id,
+      id_destinatario: modalPerfil.id_usuario,
+      contenido: nuevoMensaje.trim(),
+      leido: false,
+    });
+    setNuevoMensaje("");
+    // Recargar mensajes
+    const { data } = await supabase
+      .from("mensaje")
+      .select("*")
+      .or(
+        `and(id_remitente.eq.${usuario.id},id_destinatario.eq.${modalPerfil.id_usuario}),and(id_remitente.eq.${modalPerfil.id_usuario},id_destinatario.eq.${usuario.id})`,
+      )
+      .gte("created_at", `${hoy}T00:00:00`)
+      .order("created_at", { ascending: true });
+    setMensajesChat(data || []);
+    setEnviando(false);
+  };
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
@@ -291,9 +344,10 @@ export default function Empleados() {
                     >
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
-                          <AvatarInicial
+                          <AvatarEmpleado
                             nombre={emp.nombre}
                             apellido={emp.apellido}
+                            foto_url={emp.foto_url}
                           />
                           <span className="font-semibold text-slate-800">
                             {emp.nombre} {emp.apellido}
@@ -319,7 +373,7 @@ export default function Empleados() {
                       </td>
                       <td className="px-5 py-3 text-center">
                         <button
-                          onClick={() => setModalPerfil(emp)}
+                          onClick={() => abrirPerfil(emp)}
                           className="p-1.5 rounded-lg bg-[#eef4fc] text-[#004bb4] hover:bg-[#d0e3fc] transition-colors"
                         >
                           <Eye size={13} />
@@ -627,15 +681,78 @@ export default function Empleados() {
               </div>
             </div>
 
-            {/* Footer con botón enviar mensaje */}
-            <div className="px-6 py-4 border-t border-slate-100 flex justify-between items-center">
-              <p className="text-[11px] text-slate-400">
-                ID Empleado: #{modalPerfil.id_empleado}
-              </p>
-              <button className="flex items-center gap-2 px-4 py-2 bg-[#004bb4] hover:bg-[#003785] text-white text-xs font-semibold rounded-xl transition-colors shadow-lg shadow-blue-600/20">
-                <MessageSquare size={14} />
-                Enviar Mensaje
-              </button>
+            {/* Chat */}
+            <div className="border-t border-slate-100">
+              <div className="px-6 py-3 flex items-center gap-2 border-b border-slate-50">
+                <MessageSquare size={14} className="text-[#004bb4]" />
+                <p className="text-xs font-bold text-slate-700">Chat del día</p>
+                <span className="text-[10px] text-slate-400 ml-auto">
+                  ID: #{modalPerfil.id_empleado}
+                </span>
+              </div>
+
+              {/* Mensajes */}
+              <div className="px-6 py-3 flex flex-col gap-2 min-h-[150px] max-h-[200px] overflow-y-auto">
+                {mensajesChat.length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center py-6 gap-1">
+                    <MessageSquare size={24} className="text-slate-200" />
+                    <p className="text-xs font-semibold text-slate-400">
+                      Sin mensajes hoy
+                    </p>
+                    <p className="text-[11px] text-slate-300">
+                      Escribe un mensaje para iniciar
+                    </p>
+                  </div>
+                ) : (
+                  mensajesChat.map((m) => {
+                    const esMio = m.id_remitente === usuario.id;
+                    return (
+                      <div
+                        key={m.id_mensaje}
+                        className={`flex ${esMio ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`max-w-[75%] px-4 py-2 rounded-2xl text-xs ${
+                            esMio
+                              ? "bg-[#004bb4] text-white rounded-br-sm"
+                              : "bg-slate-100 text-slate-800 rounded-bl-sm"
+                          }`}
+                        >
+                          <p className="leading-relaxed">{m.contenido}</p>
+                          <p
+                            className={`text-[10px] mt-1 ${esMio ? "text-blue-200" : "text-slate-400"}`}
+                          >
+                            {new Date(m.created_at).toLocaleTimeString(
+                              "es-BO",
+                              { hour: "2-digit", minute: "2-digit" },
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Input */}
+              <div className="px-6 py-3 border-t border-slate-50 flex gap-2 items-center">
+                <input
+                  type="text"
+                  value={nuevoMensaje}
+                  onChange={(e) => setNuevoMensaje(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && enviarMensaje()}
+                  placeholder={`Mensaje para ${modalPerfil.nombre}...`}
+                  className="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#004bb4]/30 focus:border-[#004bb4] transition-all"
+                />
+                <button
+                  onClick={enviarMensaje}
+                  disabled={!nuevoMensaje.trim() || enviando}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-[#004bb4] hover:bg-[#003785] disabled:opacity-40 text-white text-xs font-semibold rounded-xl transition-all"
+                >
+                  <Send size={13} />
+                  {enviando ? "Enviando..." : "Enviar"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
