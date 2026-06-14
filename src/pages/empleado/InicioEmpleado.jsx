@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../../supabase/client";
 import chatbotAnimation from "../../assets/Live_chatbot.json";
+import { hoyLocal, inicioMesLocal } from "../../utils/fecha";
 
 const TIPO_CONFIG = {
   general: {
@@ -89,10 +90,8 @@ export default function InicioEmpleado() {
   const [idAdmin, setIdAdmin] = useState(null);
 
   const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
-  const hoy = new Date().toISOString().split("T")[0];
-  const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-    .toISOString()
-    .split("T")[0];
+  const hoy = hoyLocal();
+  const inicioMes = inicioMesLocal();
 
   useEffect(() => {
     cargarDatos();

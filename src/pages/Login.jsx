@@ -84,13 +84,13 @@ export default function LoginRRHH() {
   return (
     <div className="h-screen w-full flex flex-col md:flex-row bg-white font-sans text-slate-800 overflow-hidden">
       {/* IZQUIERDA: Formulario */}
-      <div className="w-full md:w-[35%] flex flex-col justify-between px-12 pt-10 pb-8 bg-white shadow-xl z-10">
+      <div className="w-full md:w-[35%] flex flex-col justify-between px-6 sm:px-12 pt-10 pb-8 bg-white shadow-xl z-10">
         {/* Logo */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <img
             src="logo-fab.jpeg"
             alt="Logo Polímeros Innovadores"
-            className="w-14 h-14 object-contain shrink-0"
+            className="w-12 h-12 sm:w-14 sm:h-14 object-contain shrink-0"
           />
           <div>
             <h1 className="font-extrabold tracking-tight text-[#002d6b] leading-tight">
@@ -107,7 +107,7 @@ export default function LoginRRHH() {
 
         {/* Formulario */}
         <div className="max-w-md w-full mx-auto">
-          <h2 className="text-3xl font-bold text-slate-900 mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-8">
             Acceso al Portal de Empleados
           </h2>
 

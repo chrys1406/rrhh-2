@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Clock, AlertTriangle, TrendingUp, User, Search } from "lucide-react";
 import { supabase } from "../../supabase/client";
+import { hoyLocal, inicioMesLocal } from "../../utils/fecha";
 
 function AvatarInicial({ nombre, apellido }) {
   const iniciales =
@@ -58,10 +59,8 @@ export default function Tardanzas() {
   });
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
-  const hoy = new Date().toISOString().split("T")[0];
-  const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-    .toISOString()
-    .split("T")[0];
+  const hoy = hoyLocal();
+  const inicioMes = inicioMesLocal();
   const [fechaFiltro, setFechaFiltro] = useState("");
 
   useEffect(() => {

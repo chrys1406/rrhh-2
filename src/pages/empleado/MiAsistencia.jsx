@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Clock, LogIn, LogOut, CheckCircle, AlertTriangle } from "lucide-react";
 import { supabase } from "../../supabase/client";
+import { hoyLocal, inicioMesLocal } from "../../utils/fecha";
 
 const ESTADO_BADGE = {
   presente: "bg-green-50 text-green-600",
@@ -15,10 +16,8 @@ export default function MiAsistencia() {
   const [loading, setLoading] = useState(true);
   const [marcando, setMarcando] = useState(false);
   const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
-  const hoy = new Date().toISOString().split("T")[0];
-  const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-    .toISOString()
-    .split("T")[0];
+  const hoy = hoyLocal();
+  const inicioMes = inicioMesLocal();
 
   console.log("Usuario del localStorage:", usuario);
   useEffect(() => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, LogIn, LogOut, Pencil, X } from "lucide-react";
 import { supabase } from "../../supabase/client";
+import { hoyLocal } from "../../utils/fecha";
 
 const INPUT_BASE =
   "w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#004bb4] focus:border-transparent transition-all text-sm bg-slate-50/50";
@@ -52,7 +53,7 @@ export default function Asistencia() {
     estado: "",
   });
   const [guardando, setGuardando] = useState(false);
-  const hoy = new Date().toISOString().split("T")[0];
+  const hoy = hoyLocal();
   const [fechaFiltro, setFechaFiltro] = useState(hoy);
 
   useEffect(() => {
