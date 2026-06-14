@@ -175,7 +175,7 @@ export default function MiPerfil() {
   return (
     <>
       {/* HEADER */}
-      <header className="bg-[#d0e3fc] rounded-2xl px-6 py-4 flex justify-between items-center shadow-sm">
+      <header className="bg-[#d0e3fc] rounded-2xl px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-sm">
         <div>
           <h2 className="font-extrabold text-[#002d6b] tracking-wide text-sm uppercase">
             Mi Perfil
@@ -184,7 +184,7 @@ export default function MiPerfil() {
             Tu información personal y configuración de cuenta
           </p>
         </div>
-        <span className="text-xs font-semibold text-[#002d6b]/80 bg-white/40 px-3 py-1 rounded-full">
+        <span className="text-xs font-semibold text-[#002d6b]/80 bg-white/40 px-3 py-1 rounded-full shrink-0">
           {new Date().toLocaleDateString("es-BO", {
             day: "2-digit",
             month: "long",
@@ -483,7 +483,7 @@ export default function MiPerfil() {
             <h4 className="text-sm font-bold text-slate-900 mb-4">
               Información del Puesto
             </h4>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 { label: "Área", value: empleado?.area?.nombre_area },
                 { label: "Cargo", value: empleado?.cargo?.nombre_cargo },
